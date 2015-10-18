@@ -1,0 +1,36 @@
+{
+  "name": "redis-scanrx",
+  "version": "1.0.0",
+  "description": "Rx interface for the Redis *SCAN commands, for use with node_redis",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sukobuto/redis-scanrx.git"
+  },
+  "keywords": [
+    "redis",
+    "rx",
+    "keys",
+    "scan",
+    "sscan",
+    "hscan",
+    "zscan"
+  ],
+  "author": "sukobuto (http://sukobuto.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sukobuto/redis-scanrx/issues"
+  },
+  "homepage": "https://github.com/sukobuto/redis-scanrx#readme",
+  "devDependencies": {
+    "linq": "^3.0.5",
+    "redis": "^2.2.4",
+    "tape": "^4.2.1"
+  },
+  "dependencies": {
+    "rx": "^4.0.6"
+  }
+}
