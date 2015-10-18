@@ -10,7 +10,9 @@ var redis = require("redis");
 // append scanrx methods for any clients
 require("redis-scanrx")(redis);
 
+var client = redis.createClient();
 var common_prefix = "sample-app:";
+
 client.scanrx()
 	.map(function (x, idx, obs) {
 		// remove common prefix for all keys
