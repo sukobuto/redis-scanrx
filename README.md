@@ -36,11 +36,25 @@ client.scanrx()
 // => Next: key:9
 ```
 
+If you want to get results as an array with async/await:
+ 
+```js
+
+async function example() {
+	var keys = await client.scanrx("sample-app:key:*").toArray().toPromise();
+	console.log(keys);
+}
+
+example();
+
+// => ["sample-app:key:49", "sample-app:key:2", "sample-app:key:41", "sample-app:key:43", ...] 
+```
+
 # methods
 
 ## client.scanrx([pattern])
 
-Create a new Rx stream for Redis SCAN replies.
+Create a new Rx observable for Redis SCAN replies.
 Calls the `scan` command recursively, and each keys are supplied as stream elements.
 
 - `pattern`: (opt) the pattern to match keys against.
@@ -54,7 +68,7 @@ client.scanrx("key:*")
 
 ## client.sscanrx(key, [pattern])
 
-Create a new Rx stream for Redis SSCAN replies with a key.
+Create a new Rx observable for Redis SSCAN replies with a key.
 Calls the `sscan` command recursively on key `key`, and each members are supplied as stream elements.
 
 - `key`: the key of the set.
@@ -62,7 +76,7 @@ Calls the `sscan` command recursively on key `key`, and each members are supplie
 
 ## client.hscanrx(key, [pattern])
 
-Create a new Rx stream for Redis HSCAN replies.
+Create a new Rx observable for Redis HSCAN replies.
 Calls the `hscan` command recursively on key `key`, and each field/value pair objects are supplied as stream elements, i.e.:
 
 ```js
@@ -80,7 +94,7 @@ client.hscanrx("hash:1")
 
 ## client.zscanrx(key, [pattern])
 
-Create a new Rx stream for Redis ZSCAN replies.
+Create a new Rx observable for Redis ZSCAN replies.
 Calls the `zscan` command recursively on key `key`, and each element/score pair objects are supplied as stream elements, i.e:
 
 ```js

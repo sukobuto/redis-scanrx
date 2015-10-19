@@ -9,17 +9,6 @@ var DB = 15;
 var scanrx = require('../index');
 scanrx(redis);
 
-/**
- * bundle result items as an array
- * @param acc
- * @param x
- * @returns {*}
- */
-function arrayReducer(acc, x) {
-	acc.push(x);
-	return acc;
-}
-
 function getClient() {
 	var client = redis.createClient(PORT, HOST);
 	client.select(DB);
@@ -43,35 +32,33 @@ test("setup", function(t) {
 test("scan", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		t.equals(records.length, 53, "Correct number of records");
-		t.ok(records.indexOf("key:10") >= 0, "has an expected key");
-		t.ok(records.indexOf("hash:1") >= 0, "has an expected key");
-		client.quit(function () {
-			t.end()
-		})
-	}
-
 	client.scanrx()
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			t.equals(records.length, 53, "Correct number of records");
+			t.ok(records.indexOf("key:10") >= 0, "has an expected key");
+			t.ok(records.indexOf("hash:1") >= 0, "has an expected key");
+			client.quit(function () {
+				t.end()
+			})
+		}, console.error.bind(console));
 });
 
 test("scan w/ pattern", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		t.equals(records.length, 50, "Correct number of records");
-		t.ok(records.indexOf("key:10") >= 0, "has an expected key");
-		t.ok(records.indexOf("set:1") == -1, "key was excluded");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.scanrx("key:*")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			t.equals(records.length, 50, "Correct number of records");
+			t.ok(records.indexOf("key:10") >= 0, "has an expected key");
+			t.ok(records.indexOf("set:1") == -1, "key was excluded");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind(console));
 });
 
 test("hscan", function(t) {
@@ -88,94 +75,98 @@ test("hscan", function(t) {
 	}
 
 	client.hscanrx("hash:1")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			var q = Enumerable.from(records);
+			t.equals(records.length, 500, "Correct number of records");
+			t.ok(q.any("$.field == 'field_10'"), "Found an expected record");
+			t.ok(q.any("$.value == 'value_333'"), "Found an expected record");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
 
 test("hscan w/ pattern", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		var q = Enumerable.from(records);
-		t.equals(records.length, 111, "Correct number of records");
-		t.notOk(q.any("$.field == 'field_10'"), "record excluded");
-		t.ok(q.any("$.value == 'value_333'"), "Found an expected record");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.hscanrx("hash:1", "field_3*")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			var q = Enumerable.from(records);
+			t.equals(records.length, 111, "Correct number of records");
+			t.notOk(q.any("$.field == 'field_10'"), "record excluded");
+			t.ok(q.any("$.value == 'value_333'"), "Found an expected record");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
 
 test("sscan", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		t.equals(records.length, 500, "Correct number of records");
-		t.ok(records.indexOf("member_10") >= 0, "has an expected key");
-		t.ok(records.indexOf("member_333") >= 0, "has an expected key");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.sscanrx("set:1")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			t.equals(records.length, 500, "Correct number of records");
+			t.ok(records.indexOf("member_10") >= 0, "has an expected key");
+			t.ok(records.indexOf("member_333") >= 0, "has an expected key");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
 
 test("sscan w/ pattern", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		t.equals(records.length, 111, "Correct number of records");
-		t.ok(records.indexOf("member_10") == -1, "key was excluded");
-		t.ok(records.indexOf("member_333") >= 0, "has an expected value");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.sscanrx("set:1", "member_3*")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			t.equals(records.length, 111, "Correct number of records");
+			t.ok(records.indexOf("member_10") == -1, "key was excluded");
+			t.ok(records.indexOf("member_333") >= 0, "has an expected value");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
 
 test("zscan", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		var q = Enumerable.from(records);
-		t.equals(records.length, 500, "Correct number of records");
-		t.ok(q.any("$.element == 'element_10'"), "Found an expected record");
-		t.ok(q.any("$.element == 'element_333'"), "Found an expected record");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.zscanrx("zset:1")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			var q = Enumerable.from(records);
+			t.equals(records.length, 500, "Correct number of records");
+			t.ok(q.any("$.element == 'element_10'"), "Found an expected record");
+			t.ok(q.any("$.element == 'element_333'"), "Found an expected record");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
 
 test("zscan w/ pattern", function(t) {
 	var client = getClient();
 
-	function checkResults(records) {
-		var q = Enumerable.from(records);
-		t.equals(records.length, 111, "Correct number of records");
-		t.notOk(q.any("$.element == 'element_10'"), "Found an expected record");
-		t.ok(q.any("$.element == 'element_333'"), "Found an expected record");
-		client.quit(function() {
-			t.end()
-		})
-	}
-
 	client.zscanrx("zset:1", "element_3*")
-		.reduce(arrayReducer, [])
-		.subscribe(checkResults, console.error.bind(console));
+		.toArray()
+		.toPromise()
+		.then(function (records) {
+			var q = Enumerable.from(records);
+			t.equals(records.length, 111, "Correct number of records");
+			t.notOk(q.any("$.element == 'element_10'"), "Found an expected record");
+			t.ok(q.any("$.element == 'element_333'"), "Found an expected record");
+			client.quit(function() {
+				t.end()
+			})
+		}, console.error.bind)
 });
