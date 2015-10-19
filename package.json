@@ -1,6 +1,6 @@
 {
   "name": "redis-scanrx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rx interface for the Redis *SCAN commands, for use with node_redis",
   "main": "index.js",
   "scripts": {
